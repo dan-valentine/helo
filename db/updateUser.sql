@@ -1,21 +1,10 @@
-UPDATE users set
-( 
-    birthday, 
-    hair_color, 
-    eye_color, 
-    gender, 
-    first_name, 
-    last_name
-) 
-VALUES
-(
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7
-)
+UPDATE users SET
+    birthday = $2, 
+    hair_color = $3, 
+    eye_color = $4, 
+    gender = $5, 
+    first_name = $6, 
+    last_name = $7
 WHERE 
 id = $1
-LIMIT 1;
+RETURNING *;
