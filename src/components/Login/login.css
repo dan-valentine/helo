@@ -1,0 +1,29 @@
+.login_background {
+    background-image: linear-gradient(99deg, #ff70a6, #ff9770 40%, #FFD670 73%, #E9FF70);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login_box {
+    height: 40vh;
+    width: 40vw;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: 800;
+    padding: 25px;
+    box-shadow: 0 14px 28px 0 rgba(0, 0, 0, 0.25), 0 10px 10px 0 rgba(0, 0, 0, 0.26);
+}
+
+.login_box a {
+    color: #fff;
+    text-decoration: none;
+
+}
+
+.h1 {
+    font-size: 70px;
+}
