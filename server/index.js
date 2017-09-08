@@ -9,6 +9,8 @@ const express = require('express')
 
 const app = express();
 
+app.use(bodyParser())
+
 //MIDDLEWARE
 app.use(session({
     secret: process.env.SECRET,
@@ -18,9 +20,10 @@ app.use(session({
 
 //FOR TESTING ONLY COMMENT OUT LATER
 app.use((req, res, next) => {
+    req.session.user = {};
     req.session.user.id = 1;
     req.session.user.birthday = "September 8, 1989";
-    req.session.user.hair_color = "black";
+    req.session.user.hair_color = "purple";
     req.session.user.eye_color = "blue";
     req.session.user.gender = "male";
     req.session.user.first_name = "Dan";
@@ -90,6 +93,10 @@ massive(process.env.CONNECTIONSTRING).then(db => {
 //     return res.redirect(302, 'http://localhost:3000/#/');
 // })
 
+app.get('/api/me', (req, res) => {
+    res.status(200).send(req.session.user)
+})
+
 //FRIEND ENDPOINTS
 app.get('/api/friend/list', ((req, res) => {
     const dbInstance = req.app.get('db');
@@ -107,17 +114,25 @@ app.post('/api/friend/add', ((req, res) => {
 
 app.post('/api/friend/remove', ((req, res) => {
     const dbInstance = req.app.get('db');
-    dbInstance.deleteFriend(req.session.user.id, req.body.friendID)
+    dbInstance.removeFriend(req.session.user.id, req.body.friendID)
     .then(friends => { res.status(200).send(friends)})
     .catch(err => { res.status(500).send(err) })
 }))
 
 //USER ENDPOINTS
-app.patch('api/user/patch/:id', ((req, res) => {
+app.patch('/api/user/patch/:id', ((req, res) => {
     const dbInstance = req.app.get('db');
     let {birthday, hair_color, eye_color, gender, first_name, last_name} = req.body;
-    dbInstance.addAttribute(req.params.id, birthday, hair_color, eye_color, gender, first_name, last_name)
+    dbInstance.updateUser(req.params.id, birthday, hair_color, eye_color, gender, first_name, last_name)
     .then(attributes => {res.status(200).send(attributes)})
+    .catch(err => { res.status(500).send(err) })
+}))
+
+app.get('/api/user/list', ((req, res) => {
+    const dbInstance = req.app.get('db');
+    let page = req.query.page ? req.query.page : 1;
+    dbInstance.getUsersPagination(req.session.user.id, ((page-1)*24))
+    .then(users => {res.status(200).send(users)})
     .catch(err => { res.status(500).send(err) })
 }))
 
@@ -138,7 +153,37 @@ app.get('/api/user/search', ((req, res) => {
 
 
 //RECOMMENDED ENDPOINTS
-app.post('/api/recommended',)
+app.get('/api/recommended', ((req, res) =>{
+    const dbInstance = req.app.get('db');
+    dbInstance.getUsersFilter()
+    .then(users => {
+        for(let prop in req.query) {
+            users = users.filter(user => {
+                return user[prop]==(req.session.user[prop])
+            })
+        }
+        res.status(200).send(users)
+    })
+    .catch(err => { res.status(500).send(err) })
+}))
+
+app.post('/api/recommended/add', ((req, res) => {
+    const dbInstance = req.app.get('db');
+    dbInstance.addFriend(req.session.user.id, req.body.friendID)
+    .then(_ => { 
+        dbInstance.getUsersFilter()
+        .then(users => {
+            for(let prop in req.query) {
+                users = users.filter(user => {
+                    return user[prop]==(req.session.user[prop])
+                })
+            }
+            res.status(200).send(users)
+        })
+        .catch(err => { res.status(500).send(err) })
+    })
+    .catch(err => { res.status(500).send(err) })
+}))
 
 
 
